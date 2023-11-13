@@ -28,6 +28,10 @@ struct ZitadelConfiguration {
     self.clientId = clientId
     self.clientSecret = clientSecret
   }
+
+  var basicAuth: BasicAuthorization {
+    .init(username: clientId, password: clientSecret)
+  }
 }
 
 struct ZitadelConfigurationKey: StorageKey {
