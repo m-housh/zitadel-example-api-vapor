@@ -1,15 +1,36 @@
-@testable import App
 import XCTVapor
 
-final class AppTests: XCTestCase {
-    func testHelloWorld() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        try await configure(app)
+@testable import App
 
-        try app.test(.GET, "hello", afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Hello, world!")
-        })
-    }
+final class AppTests: XCTestCase {
+
+  func test_invalid_token() async throws {
+    let authenticator = ZitadelTokenAuthenticator.empty
+    let token = ZitadelTokenAuthenticator.TokenResponse(
+      active: false,
+      exp: 1_234_567_890,
+      name: "Test",
+      roles: [:]
+    )
+    XCTAssertThrowsError(try authenticator.validateToken(token))
+  }
+
+  func test_valid_token() throws {
+    let authenticator = ZitadelTokenAuthenticator.readMessages
+    let token = ZitadelTokenAuthenticator.TokenResponse(
+      active: true,
+      exp: Date().timeIntervalSince1970 + 1000,
+      name: "Test",
+      roles: ["read:messages": ["12345788890": "example.zitadel.cloud"]]
+    )
+    XCTAssertNoThrow(try authenticator.validateToken(token))
+
+  }
+}
+
+extension ZitadelTokenAuthenticator {
+
+  static let empty: Self = .init()
+
+  static let readMessages: Self = .init("read:messages")
 }
